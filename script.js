@@ -182,12 +182,19 @@ function formatCurrency(value) {
 // CART
 // ============================================================
 (function initCart() {
-  const cartBtn     = document.getElementById("cart-btn");
-  const cartOverlay = document.getElementById("cart-overlay");
-  const cartClose   = document.getElementById("cart-close");
-  const checkoutBtn = document.getElementById("checkout-btn");
+  const cartBtn       = document.getElementById("cart-btn");
+  const cartBtnMobile = document.getElementById("cart-btn-mobile");
+  const cartOverlay   = document.getElementById("cart-overlay");
+  const cartClose     = document.getElementById("cart-close");
+  const checkoutBtn   = document.getElementById("checkout-btn");
 
   cartBtn.addEventListener("click", openCart);
+  if (cartBtnMobile) cartBtnMobile.addEventListener("click", () => {
+    // Close the nav drawer first, then open cart
+    document.getElementById("hamburger").classList.remove("open");
+    document.getElementById("nav-links").classList.remove("open");
+    openCart();
+  });
   cartClose.addEventListener("click", closeCart);
   cartOverlay.addEventListener("click", e => {
     if (e.target === cartOverlay) closeCart();
@@ -218,12 +225,18 @@ function removeFromCart(cartId) {
 }
 
 function updateCartBadge() {
-  const badge = document.getElementById("cart-badge");
+  const badge       = document.getElementById("cart-badge");
+  const badgeMobile = document.getElementById("cart-badge-menu");
   if (cart.length > 0) {
     badge.textContent = cart.length;
     badge.classList.add("visible");
+    if (badgeMobile) {
+      badgeMobile.textContent = cart.length;
+      badgeMobile.classList.add("visible");
+    }
   } else {
     badge.classList.remove("visible");
+    if (badgeMobile) badgeMobile.classList.remove("visible");
   }
 }
 

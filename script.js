@@ -312,7 +312,7 @@ function renderProducts() {
 }
 
 // ============================================================
-// DESIGN YOUR ORDER — Canvas Preview
+// DESIGN YOUR ORDER — Canvas Preview with drag, colors, WhatsApp image
 // ============================================================
 (function initDesign() {
   const canvas        = document.getElementById("design-canvas");
@@ -321,8 +321,24 @@ function renderProducts() {
   const uploadInput   = document.getElementById("design-upload");
   const filenameEl    = document.getElementById("upload-filename");
   const submitBtn     = document.getElementById("submit-order");
+  const swatches      = document.querySelectorAll(".swatch");
+  const colorNameEl   = document.getElementById("color-name-display");
+  const canvasHint    = document.getElementById("canvas-hint");
 
-  // Populate product dropdown
+  // ---- State ----
+  let shirtColor   = "#ffffff";   // current t-shirt color
+  let shirtImg     = null;        // loaded product image (if any)
+
+  // Sticker position & drag state
+  let sticker = {
+    x: canvas.width / 2,
+    y: canvas.height * 0.38,
+    w: 0, h: 0,           // set when image loads
+    dragging: false,
+    offX: 0, offY: 0
+  };
+
+  // ---- Populate product dropdown ----
   function populateSelect() {
     const products = getProducts();
     productSelect.innerHTML = '<option value="">— Select a product —</option>';
@@ -338,106 +354,136 @@ function renderProducts() {
   }
   populateSelect();
 
-  // Draw canvas
-  function drawCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // ---- Draw everything ----
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
     ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, W, H);
 
-    const drawDesignOverlay = () => {
-      if (designImage) {
-        const maxW  = canvas.width * 0.55;
-        const maxH  = canvas.height * 0.45;
-        const ratio = Math.min(maxW / designImage.width, maxH / designImage.height);
-        const dw    = designImage.width * ratio;
-        const dh    = designImage.height * ratio;
-        const dx    = (canvas.width - dw) / 2;
-        const dy    = canvas.height * 0.28 - dh / 2;
-        ctx.globalAlpha = 0.92;
-        ctx.drawImage(designImage, dx, dy, dw, dh);
-        ctx.globalAlpha = 1;
-      }
-    };
+    if (shirtImg) {
+      // Draw the actual product image tinted with chosen color
+      // 1. Draw image normally
+      const ratio = Math.min(W / shirtImg.width, H / shirtImg.height) * 0.92;
+      const dw = shirtImg.width  * ratio;
+      const dh = shirtImg.height * ratio;
+      const dx = (W - dw) / 2;
+      const dy = (H - dh) / 2;
+      ctx.drawImage(shirtImg, dx, dy, dw, dh);
 
-    if (selectedProduct && selectedProduct.image) {
-      const img = new Image();
-      img.onload = () => {
-        const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
-        const dw    = img.width * ratio;
-        const dh    = img.height * ratio;
-        const dx    = (canvas.width - dw) / 2;
-        const dy    = (canvas.height - dh) / 2;
-        ctx.drawImage(img, dx, dy, dw, dh);
-        drawDesignOverlay();
-        drawLabel();
-      };
-      img.onerror = () => {
-        drawPlaceholderShirt();
-        drawDesignOverlay();
-        drawLabel();
-      };
-      img.src = selectedProduct.image;
+      // 2. Tint overlay using multiply-like blend
+      ctx.globalCompositeOperation = "multiply";
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(dx, dy, dw, dh);
+      ctx.globalCompositeOperation = "source-over";
     } else {
-      drawPlaceholderShirt();
-      drawDesignOverlay();
-      drawLabel();
+      // Draw SVG-style placeholder shirt in chosen color
+      drawPlaceholderShirt(W, H);
     }
+
+    // Draw sticker (draggable design)
+    if (designImage && sticker.w > 0) {
+      ctx.save();
+      // Subtle shadow so sticker pops off shirt
+      ctx.shadowColor   = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur    = 8;
+      ctx.shadowOffsetY = 3;
+      ctx.drawImage(
+        designImage,
+        sticker.x - sticker.w / 2,
+        sticker.y - sticker.h / 2,
+        sticker.w,
+        sticker.h
+      );
+      ctx.restore();
+
+      // Dashed border when dragging
+      if (sticker.dragging) {
+        ctx.strokeStyle = "#c9a84c";
+        ctx.lineWidth   = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(
+          sticker.x - sticker.w / 2 - 2,
+          sticker.y - sticker.h / 2 - 2,
+          sticker.w + 4,
+          sticker.h + 4
+        );
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Bottom label
+    drawLabel(W, H);
   }
 
-  function drawPlaceholderShirt() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const w  = 180, h = 200;
-    const x  = cx - w / 2;
-    const y  = cy - h / 2 + 10;
+  function drawPlaceholderShirt(W, H) {
+    const cx = W / 2, cy = H / 2;
+    const w = W * 0.62, h = H * 0.62;
+    const x = cx - w / 2, y = cy - h / 2;
 
-    ctx.fillStyle   = "#2a2a2a";
-    ctx.strokeStyle = "#c9a84c";
-    ctx.lineWidth   = 1.5;
+    // Shirt fill
+    ctx.fillStyle = shirtColor;
+    ctx.strokeStyle = "rgba(201,168,76,0.5)";
+    ctx.lineWidth = 1.5;
+
+    const sl = w * 0.22;   // sleeve length
+    const sw = w * 0.28;   // sleeve width
+    const nw = w * 0.22;   // neck width
 
     ctx.beginPath();
-    ctx.moveTo(x + 40, y);
-    ctx.lineTo(x, y + 50);
-    ctx.lineTo(x + 40, y + 70);
-    ctx.lineTo(x + 40, y + h);
-    ctx.lineTo(x + w - 40, y + h);
-    ctx.lineTo(x + w - 40, y + 70);
-    ctx.lineTo(x + w, y + 50);
-    ctx.lineTo(x + w - 40, y);
-    ctx.quadraticCurveTo(cx + 20, y + 30, cx, y + 25);
-    ctx.quadraticCurveTo(cx - 20, y + 30, x + 40, y);
+    ctx.moveTo(x + sl, y);
+    ctx.lineTo(x, y + sw);
+    ctx.lineTo(x + sl, y + sw * 0.8);
+    ctx.lineTo(x + sl, y + h);
+    ctx.lineTo(x + w - sl, y + h);
+    ctx.lineTo(x + w - sl, y + sw * 0.8);
+    ctx.lineTo(x + w, y + sw);
+    ctx.lineTo(x + w - sl, y);
+    ctx.quadraticCurveTo(cx + nw, y + h * 0.12, cx, y + h * 0.1);
+    ctx.quadraticCurveTo(cx - nw, y + h * 0.12, x + sl, y);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle    = "#c9a84c";
-    ctx.font         = "bold 28px Montserrat, sans-serif";
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.globalAlpha  = 0.3;
-    ctx.fillText("SDN", cx, cy + 20);
-    ctx.globalAlpha  = 1;
+    // Subtle SDN watermark
+    ctx.fillStyle   = shirtColor === "#ffffff" ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
+    ctx.font        = `bold ${w * 0.22}px Montserrat, sans-serif`;
+    ctx.textAlign   = "center";
+    ctx.textBaseline= "middle";
+    ctx.fillText("SDN", cx, cy + h * 0.08);
   }
 
-  function drawLabel() {
+  function drawLabel(W, H) {
     if (selectedProduct) {
-      ctx.fillStyle    = "rgba(0,0,0,0.6)";
-      ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+      ctx.fillStyle    = "rgba(0,0,0,0.65)";
+      ctx.fillRect(0, H - 36, W, 36);
       ctx.fillStyle    = "#c9a84c";
-      ctx.font         = "600 11px Montserrat, sans-serif";
+      ctx.font         = `600 10px Montserrat, sans-serif`;
       ctx.textAlign    = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(
-        selectedProduct.name + " — " + formatCurrency(selectedProduct.price),
-        canvas.width / 2,
-        canvas.height - 20
+        selectedProduct.name + "  ·  " + formatCurrency(selectedProduct.price),
+        W / 2, H - 18
       );
     }
   }
 
-  drawCanvas();
+  draw();
 
-  // Product selection
+  // ---- Color swatches ----
+  swatches.forEach(btn => {
+    btn.addEventListener("click", () => {
+      swatches.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      shirtColor = btn.dataset.color;
+      colorNameEl.textContent = btn.dataset.name;
+      draw();
+    });
+  });
+
+  // ---- Product selection ----
   productSelect.addEventListener("change", () => {
     const opt = productSelect.options[productSelect.selectedIndex];
     if (opt.value) {
@@ -447,13 +493,22 @@ function renderProducts() {
         price: opt.dataset.price,
         image: opt.dataset.image
       };
+      if (opt.dataset.image) {
+        const img = new Image();
+        img.onload  = () => { shirtImg = img; draw(); };
+        img.onerror = () => { shirtImg = null; draw(); };
+        img.src = opt.dataset.image;
+      } else {
+        shirtImg = null; draw();
+      }
     } else {
       selectedProduct = null;
+      shirtImg = null;
+      draw();
     }
-    drawCanvas();
   });
 
-  // Design upload
+  // ---- Design upload ----
   uploadInput.addEventListener("change", e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -463,14 +518,84 @@ function renderProducts() {
       const img = new Image();
       img.onload = () => {
         designImage = img;
-        drawCanvas();
+        // Default sticker size: max 40% of canvas width, keep aspect ratio
+        const maxW = canvas.width  * 0.40;
+        const maxH = canvas.height * 0.35;
+        const ratio = Math.min(maxW / img.width, maxH / img.height);
+        sticker.w = img.width  * ratio;
+        sticker.h = img.height * ratio;
+        sticker.x = canvas.width  / 2;
+        sticker.y = canvas.height * 0.38;
+        canvasHint.textContent = "Drag the design to reposition it";
+        draw();
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
 
-  // Submit order via WhatsApp
+  // ---- Drag logic (mouse + touch) ----
+  function getCanvasPos(e) {
+    const rect  = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const src = e.touches ? e.touches[0] : e;
+    return {
+      x: (src.clientX - rect.left)  * scaleX,
+      y: (src.clientY - rect.top)   * scaleY
+    };
+  }
+
+  function hitSticker(pos) {
+    if (!designImage || sticker.w === 0) return false;
+    return (
+      pos.x >= sticker.x - sticker.w / 2 - 8 &&
+      pos.x <= sticker.x + sticker.w / 2 + 8 &&
+      pos.y >= sticker.y - sticker.h / 2 - 8 &&
+      pos.y <= sticker.y + sticker.h / 2 + 8
+    );
+  }
+
+  function onDragStart(e) {
+    const pos = getCanvasPos(e);
+    if (hitSticker(pos)) {
+      sticker.dragging = true;
+      sticker.offX = pos.x - sticker.x;
+      sticker.offY = pos.y - sticker.y;
+      canvas.style.cursor = "grabbing";
+      e.preventDefault();
+    }
+  }
+
+  function onDragMove(e) {
+    if (!sticker.dragging) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    // Clamp so sticker stays inside canvas
+    const hw = sticker.w / 2, hh = sticker.h / 2;
+    sticker.x = Math.max(hw, Math.min(canvas.width  - hw, pos.x - sticker.offX));
+    sticker.y = Math.max(hh, Math.min(canvas.height - hh, pos.y - sticker.offY));
+    draw();
+  }
+
+  function onDragEnd() {
+    sticker.dragging = false;
+    canvas.style.cursor = "grab";
+    draw();
+  }
+
+  // Mouse
+  canvas.addEventListener("mousedown",  onDragStart);
+  canvas.addEventListener("mousemove",  onDragMove);
+  canvas.addEventListener("mouseup",    onDragEnd);
+  canvas.addEventListener("mouseleave", onDragEnd);
+
+  // Touch
+  canvas.addEventListener("touchstart", onDragStart, { passive: false });
+  canvas.addEventListener("touchmove",  onDragMove,  { passive: false });
+  canvas.addEventListener("touchend",   onDragEnd);
+
+  // ---- Submit order via WhatsApp (with canvas image) ----
   submitBtn.addEventListener("click", () => {
     const name    = document.getElementById("order-name").value.trim();
     const phone   = document.getElementById("order-phone").value.trim();
@@ -483,20 +608,59 @@ function renderProducts() {
     if (!phone)   { showToast("Please enter your phone number.", "error"); return; }
     if (!size)    { showToast("Please select a size.", "error"); return; }
 
+    // Get the chosen color name
+    const activeSwatchEl = document.querySelector(".swatch.active");
+    const chosenColor    = activeSwatchEl ? activeSwatchEl.dataset.name : shirtColor;
+
+    // Export canvas as image and upload to a data URL
+    // We send the image via a separate link using a blob URL
     const hasDesign = designImage !== null;
+
+    // Build the canvas snapshot as a data URL
+    const imageDataUrl = canvas.toDataURL("image/png");
+
+    // Open image in new tab so owner can see it, then open WhatsApp
+    const previewWin = window.open("", "_blank");
+    if (previewWin) {
+      previewWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>SDN Order Preview</title>
+          <style>
+            body { margin:0; background:#0a0a0a; display:flex; flex-direction:column;
+                   align-items:center; justify-content:center; min-height:100vh;
+                   font-family:sans-serif; color:#c9a84c; }
+            img  { max-width:360px; width:90vw; border:1px solid #2a2a2a; border-radius:8px; }
+            p    { margin-top:1rem; font-size:0.8rem; letter-spacing:0.2em; color:#888; }
+          </style>
+        </head>
+        <body>
+          <img src="${imageDataUrl}" alt="Order Preview" />
+          <p>SDN — Order Preview</p>
+        </body>
+        </html>
+      `);
+      previewWin.document.close();
+    }
+
     const msg = encodeURIComponent(
       `🛍️ *Custom Order — SDN*\n\n` +
       `*Product:* ${product.name}\n` +
+      `*T-Shirt Color:* ${chosenColor}\n` +
       `*Price:* ${formatCurrency(product.price)}\n` +
       `*Size:* ${size}\n\n` +
       `*Customer Name:* ${name}\n` +
       `*Phone:* ${phone}\n` +
       `*Custom Design:* ${hasDesign ? "Yes ✅" : "No"}\n` +
       `*Notes:* ${notes || "—"}\n\n` +
+      `📎 *Design Preview:* A preview window was opened — please screenshot and send it here.\n\n` +
       `Please confirm my order. Thank you! 🙏`
     );
 
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+    setTimeout(() => {
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+    }, 400);
   });
 })();
 

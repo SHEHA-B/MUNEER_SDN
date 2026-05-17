@@ -80,12 +80,14 @@ function formatCurrency(value) {
   const letters = ["s", "d", "n"];
   const words   = ["style", "defines", "now"];
 
-  // Phase 1 — spread letters apart
+  // Phase 1 — spread letters apart (less spacing on mobile)
   setTimeout(() => {
+    const isMobile = window.innerWidth <= 768;
+    const spacing  = isMobile ? "0.08em" : "0.18em";
     letters.forEach(id => {
       const el = document.getElementById("letter-" + id);
-      el.style.transition   = "letter-spacing 0.9s cubic-bezier(0.22, 1, 0.36, 1)";
-      el.style.letterSpacing = "0.18em";
+      el.style.transition    = "letter-spacing 0.9s cubic-bezier(0.22, 1, 0.36, 1)";
+      el.style.letterSpacing = spacing;
     });
   }, 700);
 

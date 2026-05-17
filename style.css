@@ -3,7 +3,7 @@
    Main Stylesheet
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700&family=Cairo:wght@300;400;600;700;800;900&display=swap');
 
 /* ---- CSS Variables ---- */
 :root {
@@ -637,7 +637,43 @@ section { padding: 6rem 5%; }
 .upload-text { font-size: 0.8rem; color: var(--gray); }
 .upload-text span { color: var(--gold); }
 
-/* Canvas Preview */
+/* Cart inside mobile menu — hidden on desktop */
+.nav-cart-mobile { display: none; }
+
+.nav-cart-menu-btn {
+  background: none;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background var(--transition), color var(--transition);
+}
+.nav-cart-menu-btn:hover {
+  background: var(--gold);
+  color: var(--bg);
+}
+.cart-badge-menu {
+  background: var(--gold);
+  color: var(--bg);
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  padding: 0 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.cart-badge-menu.visible { display: flex; }
 .design-preview {
   position: sticky;
   top: 100px;
@@ -918,6 +954,9 @@ footer {
   #navbar {
     gap: 0.5rem;
   }
+
+  /* Show cart item inside the drawer */
+  .nav-cart-mobile { display: block; }
 
   /* Sections */
   section { padding: 3.5rem 4%; }

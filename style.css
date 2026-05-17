@@ -650,6 +650,56 @@ section { padding: 6rem 5%; }
   margin-bottom: 1rem;
   text-align: center;
 }
+
+/* Color picker */
+.color-picker-wrap {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.color-picker-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  color: var(--gray);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.color-swatches {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+  outline: none;
+  position: relative;
+}
+.swatch:hover  { transform: scale(1.15); border-color: var(--gray); }
+.swatch.active { border-color: var(--gold); transform: scale(1.15); }
+.swatch.active::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: rgba(0,0,0,0.55);
+  font-weight: 900;
+}
+.color-name-display {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
 .canvas-wrap {
   background: var(--card);
   border: 1px solid var(--border);

@@ -825,16 +825,20 @@ footer {
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+
+/* ---- Tablet ---- */
 @media (max-width: 900px) {
-  .design-container { grid-template-columns: 1fr; }
-  .design-preview { position: static; }
+  .design-container { grid-template-columns: 1fr; gap: 2rem; }
+  .design-preview   { position: static; }
+  .product-grid     { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 }
+
+/* ---- Mobile ---- */
 @media (max-width: 768px) {
+  /* Nav drawer */
   .nav-links {
     position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; right: 0; bottom: 0;
     width: 280px;
     background: var(--surface);
     border-left: 1px solid var(--border);
@@ -848,12 +852,71 @@ footer {
     z-index: 999;
   }
   .nav-links.open { transform: translateX(0); }
-  .nav-links a { font-size: 1rem; }
-  .hamburger { display: flex; z-index: 1000; }
-  .nav-cart { display: none; }
-  section { padding: 4rem 5%; }
+  .nav-links a    { font-size: 1rem; }
+  .hamburger      { display: flex; z-index: 1000; }
+  .nav-cart       { display: none; }
+
+  /* Sections */
+  section { padding: 3.5rem 4%; }
+
+  /* Hero — prevent subtitle overflow */
+  .hero-subtitle {
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    padding: 0 1rem;
+  }
+  .hero-eyebrow { letter-spacing: 0.25em; }
+
+  /* Splash intro — scale down for mobile */
+  .sdn-letter {
+    font-size: clamp(3rem, 18vw, 5.5rem);
+  }
+  .sdn-word {
+    font-size: clamp(1.3rem, 7.5vw, 2.5rem);
+  }
+  .splash-tagline {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    padding: 0 1rem;
+    text-align: center;
+  }
+
+  /* Products */
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+
+  /* Design section */
+  .design-container { gap: 1.5rem; }
+  #design-canvas    { width: 100%; height: auto; }
+
+  /* Toast — keep inside screen */
+  .toast-container { right: 1rem; left: 1rem; bottom: 1rem; }
+  .toast           { min-width: unset; width: 100%; }
+
+  /* Footer links wrap */
+  .footer-links { flex-wrap: wrap; gap: 1rem; justify-content: center; }
 }
-@media (max-width: 480px) {
-  .product-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* ---- Small mobile (≤ 420px) ---- */
+@media (max-width: 420px) {
+  /* Splash: tighten further so SDN + words fit on one line */
+  .sdn-letter {
+    font-size: clamp(2.4rem, 16vw, 3.5rem);
+  }
+  .sdn-word {
+    font-size: clamp(1rem, 6.5vw, 1.8rem);
+  }
+  .splash-enter {
+    padding: 0.65rem 1.8rem;
+    font-size: 0.7rem;
+  }
+
+  /* Single column products on very small screens */
+  .product-grid { grid-template-columns: 1fr; }
+
+  /* Contact cards stack */
   .contact-grid { grid-template-columns: 1fr; }
+
+  /* Section padding tighter */
+  section { padding: 3rem 4%; }
+  .section-header { margin-bottom: 2.5rem; }
 }

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDN — Premium Streetwear</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+  <!-- ============================================================
+       SPLASH SCREEN
+       ============================================================ -->
+  <div id="splash">
+    <div class="splash-particles" id="particles"></div>
+
+    <!-- SDN logo: letters spread apart cinematically, then reveal full words -->
+    <div class="splash-logo-wrap" id="splash-logo-wrap">
+
+      <!-- The three letters, each paired with its word -->
+      <div class="sdn-letter-group" id="lg-s">
+        <span class="sdn-letter" id="letter-s">S</span>
+        <span class="sdn-word" id="word-style">tyle</span>
+      </div>
+
+      <div class="sdn-letter-group" id="lg-d">
+        <span class="sdn-letter" id="letter-d">D</span>
+        <span class="sdn-word" id="word-defines">efines</span>
+      </div>
+
+      <div class="sdn-letter-group" id="lg-n">
+        <span class="sdn-letter" id="letter-n">N</span>
+        <span class="sdn-word" id="word-now">ow</span>
+      </div>
+
+    </div>
+
+    <div class="splash-underline" id="splash-underline"></div>
+
+    <p class="splash-tagline" id="splash-tagline">Premium Streetwear</p>
+    <button class="splash-enter" id="splash-enter">Enter</button>
+  </div>
+
+  <!-- ============================================================
+       NAVBAR
+       ============================================================ -->
+  <nav id="navbar">
+    <a href="#home" class="nav-logo">SDN</a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#shop">Shop</a></li>
+      <li><a href="#design">Design Your Order</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="nav-cart" id="cart-btn" aria-label="Open cart">
+      🛒 Cart
+      <span class="cart-badge" id="cart-badge">0</span>
+    </button>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       CART PANEL
+       ============================================================ -->
+  <div class="cart-overlay" id="cart-overlay">
+    <div class="cart-panel">
+      <div class="cart-header">
+        <h3>Your Cart</h3>
+        <button class="cart-close" id="cart-close">×</button>
+      </div>
+      <div class="cart-items" id="cart-items">
+        <p class="cart-empty-msg">Your cart is empty.</p>
+      </div>
+      <div class="cart-footer" id="cart-footer" style="display:none;">
+        <div class="cart-total">
+          <span>Total</span>
+          <span id="cart-total-price">0 EGP</span>
+        </div>
+        <button class="btn-primary" style="width:100%;" id="checkout-btn">Checkout via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HERO SECTION
+       ============================================================ -->
+  <section id="home">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Est. 2024 — Limited Drops</p>
+      <h1 class="hero-title">S<span>D</span>N</h1>
+      <p class="hero-subtitle">NEW ERA OF FASHION — Style Defines Now</p>
+      <a href="#shop" class="btn-primary">Shop Now</a>
+    </div>
+    <div class="hero-scroll">Scroll</div>
+  </section>
+
+  <!-- ============================================================
+       SHOP SECTION
+       ============================================================ -->
+  <section id="shop">
+    <div class="section-header">
+      <p class="section-eyebrow">Latest Drops</p>
+      <h2 class="section-title">Our Collection</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="product-grid" id="product-grid">
+      <!-- Products injected by script.js from localStorage -->
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DESIGN YOUR ORDER SECTION
+       ============================================================ -->
+  <section id="design">
+    <div class="section-header">
+      <p class="section-eyebrow">Custom Orders</p>
+      <h2 class="section-title">Design Your Order</h2>
+      <p style="font-size:1rem;color:var(--gold);letter-spacing:0.25em;margin-top:0.5rem;">صمم طلبك</p>
+      <div class="section-divider"></div>
+    </div>
+
+    <div class="design-container">
+      <!-- LEFT: Steps -->
+      <div class="design-steps">
+
+        <!-- Step 1: Choose Product -->
+        <div class="step">
+          <p class="step-number">Step 01</p>
+          <h3 class="step-title">Choose a Product</h3>
+          <div class="form-group">
+            <label for="product-select">Select T-Shirt</label>
+            <select class="form-control" id="product-select">
+              <option value="">— Select a product —</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Step 2: Upload Design -->
+        <div class="step">
+          <p class="step-number">Step 02</p>
+          <h3 class="step-title">Upload Your Design</h3>
+          <label class="upload-area" for="design-upload">
+            <div class="upload-icon">🎨</div>
+            <p class="upload-text">Click to upload your design<br><span>PNG, JPG, SVG supported</span></p>
+            <input type="file" id="design-upload" accept="image/*" />
+          </label>
+          <p id="upload-filename" style="font-size:0.75rem;color:var(--gold);margin-top:0.5rem;text-align:center;"></p>
+        </div>
+
+        <!-- Step 3: Order Details -->
+        <div class="step">
+          <p class="step-number">Step 03</p>
+          <h3 class="step-title">Your Details</h3>
+          <div class="form-group">
+            <label for="order-name">Full Name</label>
+            <input type="text" class="form-control" id="order-name" placeholder="Your name" />
+          </div>
+          <div class="form-group">
+            <label for="order-phone">Phone Number</label>
+            <input type="tel" class="form-control" id="order-phone" placeholder="+20 xxx xxx xxxx" />
+          </div>
+          <div class="form-group">
+            <label for="order-size">Size</label>
+            <select class="form-control" id="order-size">
+              <option value="">— Select size —</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="order-notes">Notes (optional)</label>
+            <textarea class="form-control" id="order-notes" rows="3" placeholder="Any special instructions..."></textarea>
+          </div>
+          <button class="btn-whatsapp" id="submit-order">
+            <span>📱</span> Send Order via WhatsApp
+          </button>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Canvas Preview -->
+      <div class="design-preview">
+        <p class="preview-label">Live Preview</p>
+        <div class="canvas-wrap">
+          <canvas id="design-canvas" width="300" height="360"></canvas>
+        </div>
+        <p class="canvas-hint">Select a product and upload your design to see the preview</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CONTACT SECTION
+       ============================================================ -->
+  <section id="contact">
+    <div class="section-header">
+      <p class="section-eyebrow">Get in Touch</p>
+      <h2 class="section-title">Contact Us</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="contact-icon">📸</div>
+        <h4>Instagram</h4>
+        <!-- TODO: Replace YOUR_INSTAGRAM_USERNAME with your actual Instagram username -->
+        <a href="https://instagram.com/YOUR_INSTAGRAM_USERNAME" id="instagram-link" target="_blank" rel="noopener">
+          @YOUR_INSTAGRAM_USERNAME
+        </a>
+      </div>
+      <div class="contact-card">
+        <div class="contact-icon">💬</div>
+        <h4>WhatsApp</h4>
+        <!-- TODO: Replace YOUR_WHATSAPP_NUMBER with your number including country code (e.g. 201234567890) -->
+        <a href="https://wa.me/YOUR_WHATSAPP_NUMBER" id="whatsapp-link" target="_blank" rel="noopener">
+          Chat with us
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer>
+    <div class="footer-logo">SDN</div>
+    <ul class="footer-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#shop">Shop</a></li>
+      <li><a href="#design">Design</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <p class="footer-copy">SDN © 2025 — Premium Streetwear. All rights reserved.</p>
+  </footer>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -190,10 +190,24 @@
       <!-- RIGHT: Canvas Preview -->
       <div class="design-preview">
         <p class="preview-label">Live Preview</p>
-        <div class="canvas-wrap">
-          <canvas id="design-canvas" width="300" height="360" style="max-width:100%;height:auto;display:block;"></canvas>
+
+        <!-- T-shirt color picker -->
+        <div class="color-picker-wrap">
+          <p class="color-picker-label">T-Shirt Color</p>
+          <div class="color-swatches" id="color-swatches">
+            <button class="swatch active" data-color="#ffffff" data-name="White"  style="background:#ffffff;" title="White"></button>
+            <button class="swatch"        data-color="#1a1a1a" data-name="Black"  style="background:#1a1a1a;" title="Black"></button>
+            <button class="swatch"        data-color="#6b4c3b" data-name="Brown"  style="background:#6b4c3b;" title="Brown"></button>
+            <button class="swatch"        data-color="#4a5240" data-name="Olive"  style="background:#4a5240;" title="Olive"></button>
+            <button class="swatch"        data-color="#d4c5a9" data-name="Beige"  style="background:#d4c5a9;" title="Beige"></button>
+          </div>
+          <p class="color-name-display" id="color-name-display">White</p>
         </div>
-        <p class="canvas-hint">Select a product and upload your design to see the preview</p>
+
+        <div class="canvas-wrap">
+          <canvas id="design-canvas" width="340" height="400" style="max-width:100%;height:auto;display:block;touch-action:none;cursor:grab;"></canvas>
+        </div>
+        <p class="canvas-hint" id="canvas-hint">Select a color, upload your design, then drag it to position</p>
       </div>
     </div>
   </section>

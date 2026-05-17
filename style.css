@@ -904,7 +904,20 @@ footer {
   .nav-links.open { transform: translateX(0); }
   .nav-links a    { font-size: 1rem; }
   .hamburger      { display: flex; z-index: 1000; }
-  .nav-cart       { display: none; }
+
+  /* Show cart as icon-only on mobile — hide text, keep badge */
+  .nav-cart {
+    padding: 0.45rem 0.6rem;
+    font-size: 1.1rem;
+    letter-spacing: 0;
+    border-color: transparent;
+  }
+  .nav-cart .cart-text { display: none; }
+
+  /* Right side: cart + hamburger sit together */
+  #navbar {
+    gap: 0.5rem;
+  }
 
   /* Sections */
   section { padding: 3.5rem 4%; }

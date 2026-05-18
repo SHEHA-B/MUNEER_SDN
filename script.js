@@ -4,14 +4,47 @@
    ============================================================ */
 
 // ============================================================
-// CONFIGURATION — Update these two lines before going live
+// CONFIGURATION
 // ============================================================
-
-// TODO: Replace with your WhatsApp number (with country code, e.g., 201234567890)
-const WHATSAPP_NUMBER = "201515271901";
-
-// TODO: Replace with your Instagram username (without @)
+const WHATSAPP_NUMBER   = "201515271901";
 const INSTAGRAM_USERNAME = "sdn.240";
+
+// ============================================================
+// JSONBIN — قاعدة البيانات المشتركة لكل الزوار
+// ============================================================
+const JSONBIN_ID  = "6a09fa45adc21f119ab4482a";
+const JSONBIN_KEY = "$2a$10$2gTK/oZFFostkxKG3TxlmefFpuNjDgxmY9duPVOaO4vlQLTNbDWFS";
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+
+// In-memory cache
+let _cachedProducts = [];
+
+function getProducts() {
+  return _cachedProducts;
+}
+
+// جلب المنتجات من JSONBin
+async function fetchProducts() {
+  try {
+    const res = await fetch(JSONBIN_URL + "/latest", {
+      headers: { "X-Access-Key": JSONBIN_KEY }
+    });
+    if (!res.ok) throw new Error("fetch failed");
+    const data = await res.json();
+    // البيانات ممكن تكون { products: [...] } أو مصفوفة مباشرة
+    const raw = data.record;
+    _cachedProducts = Array.isArray(raw) ? raw
+                    : Array.isArray(raw?.products) ? raw.products
+                    : [];
+    renderProducts();
+    populateDesignSelect(_cachedProducts);
+  } catch (err) {
+    console.warn("JSONBin error:", err.message);
+    _cachedProducts = [];
+    renderProducts();
+    populateDesignSelect([]);
+  }
+}
 
 // ============================================================
 // STATE
@@ -21,16 +54,153 @@ let designImage = null;
 let selectedProduct = null;
 
 // ============================================================
-// UTILITY
+// TRANSLATIONS
 // ============================================================
-function getProducts() {
-  try {
-    return JSON.parse(localStorage.getItem("sdn_products") || "[]");
-  } catch {
-    return [];
+const i18n = {
+  en: {
+    tagline:         "Premium Streetwear",
+    enter:           "Enter",
+    nav_home:        "Home",
+    nav_shop:        "Shop",
+    nav_design:      "Design Your Order",
+    nav_design_short:"Design",
+    nav_contact:     "Contact",
+    cart:            "Cart",
+    cart_title:      "Your Cart",
+    cart_empty:      "Your cart is empty.",
+    total:           "Total",
+    checkout:        "Checkout via WhatsApp",
+    hero_eyebrow:    "Est. 2024 — Limited Drops",
+    hero_subtitle:   "NEW ERA OF FASHION — Style Defines Now",
+    shop_now:        "Shop Now",
+    scroll:          "Scroll",
+    shop_eyebrow:    "Latest Drops",
+    shop_title:      "Our Collection",
+    design_eyebrow:  "Custom Orders",
+    design_title:    "Design Your Order",
+    step1_num:       "Step 01",
+    step1_title:     "Choose a Product",
+    select_shirt:    "Select T-Shirt",
+    select_placeholder: "— Select a product —",
+    step2_num:       "Step 02",
+    step2_title:     "Upload Your Design",
+    upload_text:     "Click to upload your design",
+    step3_num:       "Step 03",
+    step3_title:     "Your Details",
+    label_name:      "Full Name",
+    ph_name:         "Your name",
+    label_phone:     "Phone Number",
+    label_size:      "Size",
+    size_placeholder:"— Select size —",
+    label_notes:     "Notes (optional)",
+    ph_notes:        "Any special instructions...",
+    send_order:      "Send Order via WhatsApp",
+    preview_label:   "Live Preview",
+    color_label:     "T-Shirt Color",
+    canvas_hint:     "Select a color, upload your design, then drag it to position",
+    contact_eyebrow: "Get in Touch",
+    contact_title:   "Contact Us",
+    chat_us:         "Chat with us",
+    footer_copy:     "SDN © 2025 — Premium Streetwear. All rights reserved.",
+    add_to_cart:     "Add to Cart",
+    no_products:     "No products yet. Check back soon for new drops!",
+  },
+  ar: {
+    tagline:         "ملابس بريميوم",
+    enter:           "دخول",
+    nav_home:        "الرئيسية",
+    nav_shop:        "المتجر",
+    nav_design:      "صمم طلبك",
+    nav_design_short:"التصميم",
+    nav_contact:     "تواصل معنا",
+    cart:            "السلة",
+    cart_title:      "سلة المشتريات",
+    cart_empty:      "سلتك فارغة.",
+    total:           "الإجمالي",
+    checkout:        "إتمام الطلب عبر واتساب",
+    hero_eyebrow:    "تأسست 2024 — إصدارات محدودة",
+    hero_subtitle:   "عصر جديد من الموضة — الستايل يعرّف نفسه",
+    shop_now:        "تسوق الآن",
+    scroll:          "اسحب",
+    shop_eyebrow:    "أحدث الإصدارات",
+    shop_title:      "مجموعتنا",
+    design_eyebrow:  "طلبات مخصصة",
+    design_title:    "صمم طلبك",
+    step1_num:       "الخطوة ١",
+    step1_title:     "اختر المنتج",
+    select_shirt:    "اختر التيشيرت",
+    select_placeholder: "— اختر منتجاً —",
+    step2_num:       "الخطوة ٢",
+    step2_title:     "ارفع تصميمك",
+    upload_text:     "اضغط لرفع تصميمك",
+    step3_num:       "الخطوة ٣",
+    step3_title:     "بياناتك",
+    label_name:      "الاسم الكامل",
+    ph_name:         "اسمك",
+    label_phone:     "رقم الهاتف",
+    label_size:      "المقاس",
+    size_placeholder:"— اختر المقاس —",
+    label_notes:     "ملاحظات (اختياري)",
+    ph_notes:        "أي تعليمات خاصة...",
+    send_order:      "إرسال الطلب عبر واتساب",
+    preview_label:   "معاينة مباشرة",
+    color_label:     "لون التيشيرت",
+    canvas_hint:     "اختر لوناً، ارفع تصميمك، ثم اسحبه لتحديد موضعه",
+    contact_eyebrow: "تواصل معنا",
+    contact_title:   "اتصل بنا",
+    chat_us:         "تحدث معنا",
+    footer_copy:     "SDN © 2025 — ملابس بريميوم. جميع الحقوق محفوظة.",
+    add_to_cart:     "أضف للسلة",
+    no_products:     "لا توجد منتجات بعد. تابعنا لمعرفة أحدث الإصدارات!",
   }
+};
+
+let currentLang = localStorage.getItem("sdn_lang") || "en";
+
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem("sdn_lang", lang);
+  const html = document.documentElement;
+  html.lang = lang;
+  // RTL on body only — keeps splash & navbar always LTR
+  document.body.dir       = lang === "ar" ? "rtl" : "ltr";
+  document.body.style.textAlign = lang === "ar" ? "right" : "";
+
+  // Translate all data-i18n elements
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.dataset.i18n;
+    if (i18n[lang][key]) el.textContent = i18n[lang][key];
+  });
+
+  // Translate placeholders
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (i18n[lang][key]) el.placeholder = i18n[lang][key];
+  });
+
+  // Update lang toggle button
+  const btn = document.getElementById("lang-toggle");
+  if (btn) {
+    btn.textContent = lang === "ar" ? "EN" : "AR";
+    btn.classList.toggle("active", lang === "ar");
+  }
+
+  // Update color name display
+  const activeSwatchEl = document.querySelector(".swatch.active");
+  if (activeSwatchEl) {
+    const nameEl = document.getElementById("color-name-display");
+    if (nameEl) nameEl.textContent = lang === "ar"
+      ? activeSwatchEl.dataset.nameAr
+      : activeSwatchEl.dataset.name;
+  }
+
+  // Re-render products so "Add to Cart" button text updates
+  renderProducts();
 }
 
+// ============================================================
+// UTILITY
+// ============================================================
 function showToast(message, type = "default") {
   const container = document.getElementById("toast-container");
   const toast = document.createElement("div");
@@ -71,14 +241,14 @@ function formatCurrency(value) {
   // Timeline (ms from page load):
   //  300  — wrapper fades/scales in (CSS animation)
   //  700  — letters spread apart (letter-spacing expands)
-  // 1200  — words fade + slide in (S→tyle, D→efines, N→ow)
+  // 1200  — words fade + slide in (S→tyle, D→efined, N→ow)
   // 1700  — underline expands
   // 2000  — tagline fades in (CSS animation already handles this at 1.4s)
   // 2400  — enter button fades in (CSS animation at 1.8s)
   // 5000  — auto-hide
 
   const letters = ["s", "d", "n"];
-  const words   = ["style", "defines", "now"];
+  const words   = ["style", "defined", "now"];
 
   // Phase 1 — spread letters apart (less spacing on mobile)
   setTimeout(() => {
@@ -112,6 +282,8 @@ function formatCurrency(value) {
   function hideSplash() {
     splash.classList.add("hidden");
     document.body.style.overflow = "";
+    // Start music when user enters (respects browser autoplay policy)
+    initMusic();
   }
 
   const autoTimer = setTimeout(hideSplash, 5000);
@@ -160,6 +332,52 @@ function formatCurrency(value) {
     });
   }, { threshold: 0.4 });
   sections.forEach(s => observer.observe(s));
+})();
+
+// ============================================================
+// MUSIC
+// ============================================================
+function initMusic() {
+  const audio      = document.getElementById("bg-music");
+  const musicBtn   = document.getElementById("music-toggle");
+  if (!audio || !musicBtn) return;
+
+  audio.volume = 0.35;
+
+  // Try to play
+  audio.play().then(() => {
+    musicBtn.classList.add("playing");
+    musicBtn.classList.remove("muted");
+  }).catch(() => {
+    // Autoplay blocked — stay muted, user can click to play
+    musicBtn.classList.add("muted");
+  });
+
+  musicBtn.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      musicBtn.classList.add("playing");
+      musicBtn.classList.remove("muted");
+    } else {
+      audio.pause();
+      musicBtn.classList.remove("playing");
+      musicBtn.classList.add("muted");
+    }
+  });
+}
+
+// ============================================================
+// LANGUAGE TOGGLE
+// ============================================================
+(function initLang() {
+  // Apply saved language on load
+  applyLang(currentLang);
+
+  const btn = document.getElementById("lang-toggle");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    applyLang(currentLang === "en" ? "ar" : "en");
+  });
 })();
 
 // ============================================================
@@ -297,7 +515,7 @@ function renderProducts() {
     grid.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">👕</div>
-        <p>No products yet. Check back soon for new drops!</p>
+        <p>${i18n[currentLang].no_products}</p>
       </div>
     `;
     return;
@@ -317,7 +535,7 @@ function renderProducts() {
         <h3 class="product-name">${p.name}</h3>
         <p class="product-price">${formatCurrency(p.price)}</p>
         <button class="btn-add-cart" onclick='addToCart(${JSON.stringify(p)})'>
-          Add to Cart
+          ${i18n[currentLang].add_to_cart}
         </button>
       </div>
     </div>
@@ -351,20 +569,11 @@ function renderProducts() {
     offX: 0, offY: 0
   };
 
-  // ---- Populate product dropdown ----
+  // ---- Populate product dropdown (called externally by Firebase listener) ----
   function populateSelect() {
-    const products = getProducts();
-    productSelect.innerHTML = '<option value="">— Select a product —</option>';
-    products.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = `${p.name} — ${formatCurrency(p.price)}`;
-      opt.dataset.image = p.image || "";
-      opt.dataset.name  = p.name;
-      opt.dataset.price = p.price;
-      productSelect.appendChild(opt);
-    });
+    populateDesignSelect(getProducts());
   }
+  // Initial populate (may be empty until Firebase responds)
   populateSelect();
 
   // ---- Draw everything ----
@@ -703,25 +912,21 @@ function renderProducts() {
 // INIT
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-  renderProducts();
+  fetchProducts();
 });
 
-// Sync products if admin tab is open simultaneously
-window.addEventListener("storage", e => {
-  if (e.key === "sdn_products") {
-    renderProducts();
-    // Re-populate design dropdown
-    const productSelect = document.getElementById("product-select");
-    const products = getProducts();
-    productSelect.innerHTML = '<option value="">— Select a product —</option>';
-    products.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = `${p.name} — ${formatCurrency(p.price)}`;
-      opt.dataset.image = p.image || "";
-      opt.dataset.name  = p.name;
-      opt.dataset.price = p.price;
-      productSelect.appendChild(opt);
-    });
-  }
-});
+// Helper: populate the design section dropdown
+function populateDesignSelect(products) {
+  const productSelect = document.getElementById("product-select");
+  if (!productSelect) return;
+  productSelect.innerHTML = '<option value="">— Select a product —</option>';
+  products.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = `${p.name} — ${formatCurrency(p.price)}`;
+    opt.dataset.image = p.image || "";
+    opt.dataset.name  = p.name;
+    opt.dataset.price = p.price;
+    productSelect.appendChild(opt);
+  });
+}

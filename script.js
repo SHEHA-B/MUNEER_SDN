@@ -12,9 +12,9 @@ const INSTAGRAM_USERNAME = "sdn.240";
 // ============================================================
 // JSONBIN — قاعدة البيانات المشتركة لكل الزوار
 // ============================================================
-const JSONBIN_ID  = "6a09fa45adc21f119ab4482a";
-const JSONBIN_KEY = "$2a$10$aPp1nWEeN5ZeodnWHwhJIOvt0Kyc6W4A/8W3mOvLXxPd.TpPobkrm";
-const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+const JSONBIN_KEY      = "$2a$10$aPp1nWEeN5ZeodnWHwhJIOvt0Kyc6W4A/8W3mOvLXxPd.TpPobkrm";
+const JSONBIN_INDEX_ID = "6a09fa45adc21f119ab4482a";
+const JSONBIN_BASE     = "https://api.jsonbin.io/v3/b";
 
 // In-memory cache
 let _cachedProducts = [];
@@ -23,19 +23,38 @@ function getProducts() {
   return _cachedProducts;
 }
 
-// جلب المنتجات من JSONBin
+// جلب المنتجات — كل منتج في bin منفصل
 async function fetchProducts() {
   try {
-    const res = await fetch(JSONBIN_URL + "/latest", {
+    // 1. Load index (list of bin IDs)
+    const idxRes = await fetch(`${JSONBIN_BASE}/${JSONBIN_INDEX_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY }
     });
-    if (!res.ok) throw new Error("fetch failed");
-    const data = await res.json();
-    // البيانات ممكن تكون { products: [...] } أو مصفوفة مباشرة
-    const raw = data.record;
-    _cachedProducts = Array.isArray(raw) ? raw
-                    : Array.isArray(raw?.products) ? raw.products
-                    : [];
+    if (!idxRes.ok) throw new Error("index " + idxRes.status);
+    const idxData = await idxRes.json();
+    const ids = Array.isArray(idxData.record?.ids) ? idxData.record.ids : [];
+
+    if (ids.length === 0) {
+      _cachedProducts = [];
+      renderProducts();
+      populateDesignSelect([]);
+      return;
+    }
+
+    // 2. Fetch all product bins in parallel
+    const results = await Promise.allSettled(
+      ids.map(entry =>
+        fetch(`${JSONBIN_BASE}/${entry.binId}/latest`, {
+          headers: { "X-Master-Key": JSONBIN_KEY }
+        }).then(r => r.json()).then(d => d.record)
+      )
+    );
+
+    _cachedProducts = results
+      .filter(r => r.status === "fulfilled" && r.value)
+      .map(r => r.value)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
     renderProducts();
     populateDesignSelect(_cachedProducts);
   } catch (err) {

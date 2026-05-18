@@ -27,7 +27,7 @@ function getProducts() {
 async function fetchProducts() {
   try {
     const res = await fetch(JSONBIN_URL + "/latest", {
-      headers: { "X-Access-Key": JSONBIN_KEY }
+      headers: { "X-Master-Key": JSONBIN_KEY }
     });
     if (!res.ok) throw new Error("fetch failed");
     const data = await res.json();

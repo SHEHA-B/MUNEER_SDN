@@ -10,11 +10,11 @@ const WHATSAPP_NUMBER   = "201515271901";
 const INSTAGRAM_USERNAME = "sdn.240";
 
 // ============================================================
-// JSONBIN — قاعدة البيانات المشتركة لكل الزوار
+// JSONBIN — bin واحد فيه كل المنتجات
 // ============================================================
-const JSONBIN_KEY      = "$2a$10$aPp1nWEeN5ZeodnWHwhJIOvt0Kyc6W4A/8W3mOvLXxPd.TpPobkrm";
-const JSONBIN_INDEX_ID = "6a09fa45adc21f119ab4482a";
-const JSONBIN_BASE     = "https://api.jsonbin.io/v3/b";
+const JSONBIN_KEY = "$2a$10$aPp1nWEeN5ZeodnWHwhJIOvt0Kyc6W4A/8W3mOvLXxPd.TpPobkrm";
+const JSONBIN_ID  = "6a09fa45adc21f119ab4482a";
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
 
 // In-memory cache
 let _cachedProducts = [];
@@ -23,38 +23,16 @@ function getProducts() {
   return _cachedProducts;
 }
 
-// جلب المنتجات — كل منتج في bin منفصل
 async function fetchProducts() {
   try {
-    // 1. Load index (list of bin IDs)
-    const idxRes = await fetch(`${JSONBIN_BASE}/${JSONBIN_INDEX_ID}/latest`, {
+    const res = await fetch(JSONBIN_URL + "/latest", {
       headers: { "X-Master-Key": JSONBIN_KEY }
     });
-    if (!idxRes.ok) throw new Error("index " + idxRes.status);
-    const idxData = await idxRes.json();
-    const ids = Array.isArray(idxData.record?.ids) ? idxData.record.ids : [];
-
-    if (ids.length === 0) {
-      _cachedProducts = [];
-      renderProducts();
-      populateDesignSelect([]);
-      return;
-    }
-
-    // 2. Fetch all product bins in parallel
-    const results = await Promise.allSettled(
-      ids.map(entry =>
-        fetch(`${JSONBIN_BASE}/${entry.binId}/latest`, {
-          headers: { "X-Master-Key": JSONBIN_KEY }
-        }).then(r => r.json()).then(d => d.record)
-      )
-    );
-
-    _cachedProducts = results
-      .filter(r => r.status === "fulfilled" && r.value)
-      .map(r => r.value)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const raw  = data.record;
+    _cachedProducts = Array.isArray(raw?.products) ? raw.products
+                    : Array.isArray(raw) ? raw : [];
     renderProducts();
     populateDesignSelect(_cachedProducts);
   } catch (err) {
@@ -295,20 +273,17 @@ function formatCurrency(value) {
     underline.classList.add("expand");
   }, 1700);
 
-  // ---- Hide splash ----
+  // ---- Hide splash — only on Enter button, no auto-hide ----
   document.body.style.overflow = "hidden";
 
   function hideSplash() {
     splash.classList.add("hidden");
     document.body.style.overflow = "";
-    // Start music when user enters (respects browser autoplay policy)
-    initMusic();
+    initMusic(); // start music after user interaction
   }
 
-  const autoTimer = setTimeout(hideSplash, 5000);
-
+  // NO auto-timer — user must press Enter
   enterBtn.addEventListener("click", () => {
-    clearTimeout(autoTimer);
     hideSplash();
   });
 })();
